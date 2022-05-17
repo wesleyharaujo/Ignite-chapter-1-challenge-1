@@ -17,7 +17,7 @@ function checksExistsUserAccount(request, response, next) {
   const user = users.find( user => user.username === username );
 
   if(!user) {
-    return response.status(404).json({message: "User not exist!"});
+    return response.status(404).json({error: "User not exists!"});
   }
 
   request.user = user;
@@ -30,10 +30,11 @@ function checksExistsUserTodo(request, response, next) {
   const todo = user.todos.find( todo => todo.id === id);
 
   if(!todo) {
-    return response.status(404).json({message: "To Do not found!"})
+    return response.status(404).json({error: "To Do not found!"})
   }
 
   request.todo = todo;
+  // console.log(todo);
 
   return next();
 }
@@ -41,12 +42,11 @@ function checksExistsUserTodo(request, response, next) {
 app.post('/users', (request, response) => {
   const { name, username } = request.body;
 
-  const userExist = users.find( user => user.username === username );
+  const userExists = users.find( user => user.username === username );
 
-  if(userExist) {
-    return response.status(400).json({error: "Mensagem"});
+  if(userExists) {
+    return response.status(400).json({error: "User already exists."});
   }
-
 
   const newUser = {
     id: uuidv4(),
@@ -56,7 +56,6 @@ app.post('/users', (request, response) => {
   };
 
   users.push(newUser);
-
   return response.status(201).json(newUser);
 });
 
@@ -88,25 +87,25 @@ app.put('/todos/:id', checksExistsUserAccount, checksExistsUserTodo, (request, r
 
   todo.title = title;
   todo.deadline = deadline
-
-  return response.status(200).end()
+  console.log(todo);
+  return response.status(200).json(todo);
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, checksExistsUserTodo, (request, response) => {
   const { todo } = request;
   todo.done = !todo.done;
-  return response.status(200).end();
+  return response.status(200).json(todo);
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, checksExistsUserTodo, (request, response) => {
   const { user } = request;
   const { todo } = request;
 
-  const todoIndex = user.todos.indexOf(todo);
+  const todoIndex = user.todos.findIndex( todos => todos.id === todo.id);
 
   user.todos.splice(todoIndex, 1);
 
-  return response.status(200).end();
+  return response.status(204).end();
 });
 
 module.exports = app;
